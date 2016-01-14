@@ -1,0 +1,47 @@
+apply plugin: 'scala'
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+  }
+}
+apply plugin: 'com.github.johnrengelman.shadow'
+
+version = '1.0'
+def mainClass = 'com.stan.meetapp.services.gateway.Bootstrap'
+ 
+repositories {
+  mavenCentral()
+}
+ 
+tasks.withType(ScalaCompile) {
+  scalaCompileOptions.useAnt = false
+}
+
+jar {
+  manifest { 
+    attributes "Main-Class": mainClass
+  }  
+
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
+shadowJar {
+  transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
+    resource = 'reference.conf'
+  }
+}
+
+ 
+dependencies {
+  compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.1'
+  compile group: 'org.scala-lang', name: 'scala-library', version: '2.11.7'
+  compile group: 'com.typesafe.akka', name:'akka-http-experimental_2.11', version:'2.0.1'
+  compile group: 'com.typesafe.akka', name:'akka-http-core-experimental_2.11', version:'2.0.1'
+  compile group: 'com.typesafe.akka', name:'akka-stream-experimental_2.11', version:'2.0.1'  
+  compile group: 'com.typesafe.akka', name:'akka-http-spray-json-experimental_2.11', version:'2.0.1'  
+}
