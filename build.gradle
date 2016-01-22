@@ -14,6 +14,7 @@ def mainClass = 'com.stan.meetapp.services.gateway.Bootstrap'
  
 repositories {
   mavenCentral()
+  mavenLocal()
 }
  
 tasks.withType(ScalaCompile) {
@@ -38,10 +39,13 @@ shadowJar {
 
  
 dependencies {
+  compile group: 'com.stan.meetapp.services', name: 'meetapp-service-common', version: '1.0'
   compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.1'
   compile group: 'org.scala-lang', name: 'scala-library', version: '2.11.7'
   compile group: 'com.typesafe.akka', name:'akka-http-experimental_2.11', version:'2.0.1'
   compile group: 'com.typesafe.akka', name:'akka-http-core-experimental_2.11', version:'2.0.1'
   compile group: 'com.typesafe.akka', name:'akka-stream-experimental_2.11', version:'2.0.1'  
   compile group: 'com.typesafe.akka', name:'akka-http-spray-json-experimental_2.11', version:'2.0.1'  
+  compile group: 'come.typesafe', name: 'config', version: '1.2.1'
+  
 }
