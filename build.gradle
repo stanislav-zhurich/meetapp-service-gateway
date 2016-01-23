@@ -1,20 +1,36 @@
 apply plugin: 'scala'
+apply plugin: 'maven-publish'
+apply plugin: "com.jfrog.artifactory"
+
 buildscript {
   repositories {
     jcenter()
   }
   dependencies {
     classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.0.0"
   }
 }
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = '1.0'
+version = currentVersion
+group = 'com.stan.meetapp.services'
+
 def mainClass = 'com.stan.meetapp.services.gateway.Bootstrap'
  
 repositories {
   mavenCentral()
-  mavenLocal()
+  jcenter()
+  repositories {
+    maven {
+        url "http://ecsc00103d58.epam.com:8082/artifactory/services"
+        credentials
+        {
+          username = "${artifactory_user}" 
+		  password = "${artifactory_password}"
+        }
+    }
+}
 }
  
 tasks.withType(ScalaCompile) {
@@ -37,15 +53,75 @@ shadowJar {
   }
 }
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+configurations {
+  published
+}
+
+artifactory {
+     contextUrl = 'http://ecsc00103d58.epam.com:8082/artifactory'
+	  publish {
+		repository {
+		  repoKey = 'services' // The Artifactory repository key to publish to
+		  username = "${artifactory_user}" // The publisher user name
+		  password = "${artifactory_password}" // The publisher password
+		  // This is an optional section for configuring Ivy publication (when publishIvy = true).
+		  //ivy {
+			//ivyLayout = '[organization]/[module]/ivy-[revision].xml'
+			//artifactLayout = '[organization]/[module]/[revision]/[module]-[revision](-[classifier]).[ext]'
+			//mavenCompatible = true //Convert any dots in an [organization] layout value to path separators, similar to Maven's groupId-to-path conversion. True if not specified
+		  //}
+		}
+		defaults {
+		  // Reference to Gradle configurations defined in the build script.
+		  // This is how we tell the Artifactory Plugin which artifacts should be
+		  // published to Artifactory.
+		  publishConfigs('archives', 'published')
+		  // Properties to be attached to the published artifacts.
+		  properties = ['qa.level': 'basic', 'dev.team' : 'core']
+		  // You can also attach properties to published artifacts according to
+		  // the following notation:
+		  // <configuration name> <artifact spec>
+		  // The <configuration name> should be the name of the relevant Gradle Configuration or 'all'
+		  // (for all configurations).
+		  // Artifact spec has the following structure:
+		  // group:artifact:version:classifier@ext
+		  // Any element in the artifact spec notation can contain the * and ? wildcards.
+		  // For example:
+		  // org.acme:*:1.0.?_*:*@tgz
+		  properties {
+			all '*:*:1.*:*@*', key1: 'val1', key2: 'val2'
+			all 'org.jfrog.*:*:1.*:*@jar*', key3: 'val3', key4: 'val4'
+		  }
+		  publishPom = true // Publish generated POM files to Artifactory (true by default)
+		 // publishIvy = true // Publish generated Ivy descriptor files to Artifactory (true by default)
+		}
+	  }
+	  resolve {
+		repository {
+		  repoKey = 'jcenter' // The Artifactory (preferably virtual) repository key to resolve from
+		  username = "${artifactory_user}" // Optional resolver user name (leave out to use anonymous resolution)
+		  password = "${artifactory_password}" // The resolver password
+		  maven = true     
+		}
+	  }
+}
+
  
 dependencies {
-  compile group: 'com.stan.meetapp.services', name: 'meetapp-service-common', version: '1.0'
+  compile(group: 'com.stan.meetapp.services', name: 'meetapp-service-common', version: '1.0-20160123.194013-1')
   compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.1'
   compile group: 'org.scala-lang', name: 'scala-library', version: '2.11.7'
   compile group: 'com.typesafe.akka', name:'akka-http-experimental_2.11', version:'2.0.1'
   compile group: 'com.typesafe.akka', name:'akka-http-core-experimental_2.11', version:'2.0.1'
   compile group: 'com.typesafe.akka', name:'akka-stream-experimental_2.11', version:'2.0.1'  
   compile group: 'com.typesafe.akka', name:'akka-http-spray-json-experimental_2.11', version:'2.0.1'  
-  compile group: 'come.typesafe', name: 'config', version: '1.2.1'
+  compile group: 'com.typesafe', name: 'config', version: '1.2.1'
   
 }
