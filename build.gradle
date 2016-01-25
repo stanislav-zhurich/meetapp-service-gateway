@@ -15,24 +15,6 @@ buildscript {
 
 version = currentVersion
 group = 'com.stan.meetapp.services'
-
-artifactoryPublish { 
-  dependsOn jar
-}
-
-artifacts {
-    shadowJar;
-}
-
-shadowJar {
-  baseName = project.name
-  classifier = ''
-}
-
-build.dependsOn(shadowJar);
-
-jar.enabled = false
-
  
 repositories {
   mavenCentral()
@@ -65,11 +47,18 @@ jar {
   }
 }
 
+assemble.dependsOn(shadowJar)
+jar.enabled = false
+
+
 shadowJar {
+  baseName = projectDir.name
+  classifier = ''
   transform(com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer) {
     resource = 'reference.conf'
   }
 }
+
 
 publishing {
     publications {
@@ -80,20 +69,22 @@ publishing {
 }
 
 artifactory {
-	contextUrl = 'http://ecsc00103d58.epam.com:8082/artifactory'
-	publish {
-		defaults {
-		   publications ('mavenJava')
-		}
-		repository {
-		  repoKey = 'services'  
-		  username = '${artifactory_user}'     
-		  password = '${artifactory_password}'    
-		  maven = true
-		}
+    contextUrl = 'http://ecsc00103d58.epam.com:8082/artifactory' // base artifactory url
+  publish {
+	defaults {
+	   publications ('mavenJava')
 	}
+    repository {
+      repoKey = 'services'   //The Artifactory repository key to publish to
+      username = 'admin'      //The publisher user name
+      password = 'password'       //The publisher password
+      maven = true
+    }
+  }
 }
- 
+
+
+
 dependencies {
   compile(group: 'com.stan.meetapp.services', name: 'meetapp-service-common', version: '1.0-SNAPSHOT') {transitive = false}
   compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.4.1'
