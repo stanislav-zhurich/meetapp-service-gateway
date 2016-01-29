@@ -21,6 +21,9 @@ import akka.http.scaladsl.server.Directives.segmentStringToPathMatcher
 import akka.http.scaladsl.server.MissingHeaderRejection
 import akka.http.scaladsl.server.RejectionHandler
 import akka.http.scaladsl.server.Route
+import scala.concurrent.Future
+import scala.util.Success
+import scala.util.Failure
 
 /**
  *
@@ -30,8 +33,10 @@ import akka.http.scaladsl.server.Route
 class RequestActor extends Actor with ActorCreationSupport {
 
   def receive = {
-    case message => path("test"){
-                        complete("boom")
-                    }
+    case "error" => sender ! Failure(new IllegalArgumentException)
+    case path:String => {
+      println("processed:" + path)
+      sender ! Success("processed:" + path)
+    }
   }
 }
